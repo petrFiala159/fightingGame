@@ -23,12 +23,15 @@ export default function App() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMusicOn, setIsMusicOn] = useState(true);
+  const [dmgNums, setDmgNums] = useState([]);
+  const [announce, setAnnounce] = useState(null);
   const musicStartedRef = useRef(false);
   const rafRef = useRef(null);
   const timerRef = useRef(null);
   const pressedRef = useRef({});
   const playersRef = useRef(null);
   const winnerRef = useRef("");
+  const arenaRef = useRef(null);
 
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -53,6 +56,14 @@ export default function App() {
       }
       return !prev;
     });
+  }
+
+  function triggerShake(heavy = false) {
+    const el = arenaRef.current;
+    if (!el) return;
+    el.classList.remove("arena-shake", "arena-shake--heavy");
+    void el.offsetWidth;
+    el.classList.add(heavy ? "arena-shake--heavy" : "arena-shake");
   }
 
   function toggleFullscreen() {
@@ -210,9 +221,12 @@ export default function App() {
     });
     setProjectiles([]);
     setFx([]);
+    setDmgNums([]);
     setWinner("");
     setTimer(ROUND_TIME);
     setPhase("fight");
+    setAnnounce("FIGHT!");
+    setTimeout(() => setAnnounce(null), 1200);
   }
 
   function backToSelect() {
@@ -259,6 +273,20 @@ export default function App() {
 
   function damageTarget(attackerKey, moveType, amount, headshot = false) {
     playHitSound(moveType === "kick" ? "kick" : "punch");
+    triggerShake(moveType === "kick" || moveType === "combo");
+
+    const snap = playersRef.current;
+    if (snap) {
+      const defenderKey = attackerKey === "p1" ? "p2" : "p1";
+      const defender = snap[defenderKey];
+      const hitX = defender.x + 60;
+      const hitY = STAGE_H - FLOOR_Y - defender.y - 170;
+      const numId = `dmg-${Date.now()}-${Math.random()}`;
+      const isBig = amount >= 12;
+      const isBlocked = defender.blocking;
+      setDmgNums((old) => [...old, { id: numId, x: hitX, y: hitY, value: amount, big: isBig, blocked: isBlocked }]);
+      setTimeout(() => setDmgNums((old) => old.filter((d) => d.id !== numId)), 900);
+    }
 
     setPlayers((prev) => {
       const attacker = { ...prev[attackerKey] };
@@ -553,14 +581,14 @@ export default function App() {
         <>
           <div id="hud">
             <HealthBar label={players.p1.name} hp={players.p1.hp} shotsLeft={players.p1.shotsLeft} />
-            <div className="timer">
+            <div className={`timer${timer <= 10 ? " timer--low" : ""}`}>
               <div className="t1">TIME</div>
               <div className="t2">{timer}</div>
             </div>
             <HealthBar label={players.p2.name} hp={players.p2.hp} shotsLeft={players.p2.shotsLeft} reverse />
           </div>
 
-          <div id="arena">
+          <div id="arena" ref={arenaRef}>
             <ArenaBackground />
 
             <div className="note left">{CONTROLS_INFO[0]}</div>
@@ -591,6 +619,38 @@ export default function App() {
                 )}
               </div>
             ))}
+
+            {/* Floating damage numbers */}
+            {dmgNums.map((d) => (
+              <div
+                key={d.id}
+                className={`dmg-num${d.big ? " dmg-num--big" : ""}${d.blocked ? " dmg-num--blocked" : ""}`}
+                style={{ left: d.x, top: d.y }}
+              >
+                {d.blocked ? "BLOCK" : `-${d.value}`}
+              </div>
+            ))}
+
+            {/* Combo counters */}
+            {players.p1.combo.length >= 2 && (
+              <div className="combo-p1">
+                <div className="combo-count" key={players.p1.combo.length}>{players.p1.combo.length} HIT</div>
+                <div className="combo-label">COMBO</div>
+              </div>
+            )}
+            {players.p2.combo.length >= 2 && (
+              <div className="combo-p2">
+                <div className="combo-count" key={players.p2.combo.length}>{players.p2.combo.length} HIT</div>
+                <div className="combo-label">COMBO</div>
+              </div>
+            )}
+
+            {/* Fight announce */}
+            {announce && (
+              <div className="announce">
+                <div className="announce-text" key={announce}>{announce}</div>
+              </div>
+            )}
 
             {phase === "over" && (
               <div className="ko">
