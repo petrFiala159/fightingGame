@@ -703,6 +703,11 @@ export default function App() {
 
             <div className="hud-center">
               <div className="round-label">ROUND {round}</div>
+              <div className="score-display">
+                <span style={{ color: p1Choice.color }}>{roundWins.p1}</span>
+                <span className="score-sep">:</span>
+                <span style={{ color: p2Choice.color }}>{roundWins.p2}</span>
+              </div>
               <div className={`timer${timer <= 10 ? " timer--low" : ""}`}>
                 <div className="t1">TIME</div>
                 <div className="t2">{timer}</div>
@@ -801,7 +806,14 @@ export default function App() {
                     <button type="button" onClick={startFight}>REMATCH</button>
                   </>
                 ) : (
-                  <div className="next-round-msg">Příští kolo začíná za chvíli…</div>
+                  <>
+                    <div className="round-score-big">
+                      <span style={{ color: p1Choice.color }}>{roundWins.p1}</span>
+                      <span className="round-score-sep">:</span>
+                      <span style={{ color: p2Choice.color }}>{roundWins.p2}</span>
+                    </div>
+                    <div className="next-round-msg">Příští kolo začíná za chvíli…</div>
+                  </>
                 )}
               </div>
             )}

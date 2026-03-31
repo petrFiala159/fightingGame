@@ -289,6 +289,18 @@ h2 {
   margin-bottom: 0;
 }
 
+.score-display {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  margin: 1px 0;
+}
+.score-sep {
+  color: #333;
+  margin: 0 3px;
+}
+
 /* Win pips */
 .win-pips {
   display: flex;
@@ -765,6 +777,19 @@ h2 {
 .ko--round .winner {
   font-size: 38px;
 }
+.round-score-big {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 72px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  margin-top: 10px;
+  animation: koPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.round-score-sep {
+  color: #333;
+  margin: 0 6px;
+}
+
 .next-round-msg {
   margin-top: 12px;
   font-size: 14px;
