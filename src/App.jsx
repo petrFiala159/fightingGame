@@ -25,6 +25,9 @@ export default function App() {
   const [isMusicOn, setIsMusicOn] = useState(true);
   const [dmgNums, setDmgNums] = useState([]);
   const [announce, setAnnounce] = useState(null);
+  const [round, setRound] = useState(1);
+  const [roundWins, setRoundWins] = useState({ p1: 0, p2: 0 });
+  const [isMatchOver, setIsMatchOver] = useState(false);
   const musicStartedRef = useRef(false);
   const rafRef = useRef(null);
   const timerRef = useRef(null);
@@ -32,6 +35,8 @@ export default function App() {
   const playersRef = useRef(null);
   const winnerRef = useRef("");
   const arenaRef = useRef(null);
+  const roundRef = useRef(1);
+  const roundWinsRef = useRef({ p1: 0, p2: 0 });
 
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -220,8 +225,13 @@ export default function App() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [phase]);
 
-  function startFight() {
-    unlockAudio();
+  function showAnnounce(text) {
+    setAnnounce(text);
+    playAnnounceSound();
+    setTimeout(() => setAnnounce(null), 1400);
+  }
+
+  function resetRound() {
     setPlayers({
       p1: cloneFighter(p1Choice, 140, 1, P1_KEYS, MAX_HP, MAX_SHOTS),
       p2: cloneFighter(p2Choice, 920, -1, P2_KEYS, MAX_HP, MAX_SHOTS),
@@ -230,16 +240,38 @@ export default function App() {
     setFx([]);
     setDmgNums([]);
     setWinner("");
+    winnerRef.current = "";
     setTimer(ROUND_TIME);
     setPhase("fight");
-    setAnnounce("FIGHT!");
-    playAnnounceSound();
-    setTimeout(() => setAnnounce(null), 1200);
+  }
+
+  function startFight() {
+    unlockAudio();
+    roundRef.current = 1;
+    roundWinsRef.current = { p1: 0, p2: 0 };
+    setRound(1);
+    setRoundWins({ p1: 0, p2: 0 });
+    setIsMatchOver(false);
+    resetRound();
+    showAnnounce("ROUND 1");
+  }
+
+  function startNextRound() {
+    const next = roundRef.current + 1;
+    roundRef.current = next;
+    setRound(next);
+    resetRound();
+    showAnnounce(next >= 3 ? "FINAL ROUND" : `ROUND ${next}`);
   }
 
   function backToSelect() {
     clearInterval(timerRef.current);
     cancelAnimationFrame(rafRef.current);
+    roundRef.current = 1;
+    roundWinsRef.current = { p1: 0, p2: 0 };
+    setRound(1);
+    setRoundWins({ p1: 0, p2: 0 });
+    setIsMatchOver(false);
     setPhase("select");
   }
 
@@ -469,9 +501,27 @@ export default function App() {
 
   function endFight(nextWinner) {
     clearInterval(timerRef.current);
+    cancelAnimationFrame(rafRef.current);
     setWinner(nextWinner);
     setPhase("over");
-    triggerCelebration();
+
+    const snap = playersRef.current;
+    const newWins = { ...roundWinsRef.current };
+    if (nextWinner !== "Remíza" && snap) {
+      if (nextWinner === snap.p1.name) newWins.p1 += 1;
+      else newWins.p2 += 1;
+    }
+    roundWinsRef.current = newWins;
+    setRoundWins(newWins);
+
+    const matchOver = newWins.p1 >= 2 || newWins.p2 >= 2;
+    if (matchOver) {
+      setIsMatchOver(true);
+      triggerCelebration();
+    } else {
+      playVictorySound();
+      setTimeout(() => startNextRound(), 2800);
+    }
   }
 
   function getStatBars(fighter) {
@@ -641,12 +691,33 @@ export default function App() {
       ) : (
         <>
           <div id="hud">
-            <HealthBar label={players.p1.name} hp={players.p1.hp} shotsLeft={players.p1.shotsLeft} />
-            <div className={`timer${timer <= 10 ? " timer--low" : ""}`}>
-              <div className="t1">TIME</div>
-              <div className="t2">{timer}</div>
+            <div className="hud-side">
+              <HealthBar label={players.p1.name} hp={players.p1.hp} shotsLeft={players.p1.shotsLeft} />
+              <div className="win-pips">
+                {[0, 1].map((i) => (
+                  <div key={i} className={`win-pip${i < roundWins.p1 ? " win-pip--on" : ""}`}
+                    style={i < roundWins.p1 ? { background: p1Choice.color, boxShadow: `0 0 10px ${p1Choice.color}` } : {}} />
+                ))}
+              </div>
             </div>
-            <HealthBar label={players.p2.name} hp={players.p2.hp} shotsLeft={players.p2.shotsLeft} reverse />
+
+            <div className="hud-center">
+              <div className="round-label">ROUND {round}</div>
+              <div className={`timer${timer <= 10 ? " timer--low" : ""}`}>
+                <div className="t1">TIME</div>
+                <div className="t2">{timer}</div>
+              </div>
+            </div>
+
+            <div className="hud-side hud-side--right">
+              <HealthBar label={players.p2.name} hp={players.p2.hp} shotsLeft={players.p2.shotsLeft} reverse />
+              <div className="win-pips win-pips--right">
+                {[0, 1].map((i) => (
+                  <div key={i} className={`win-pip${i < roundWins.p2 ? " win-pip--on" : ""}`}
+                    style={i < roundWins.p2 ? { background: p2Choice.color, boxShadow: `0 0 10px ${p2Choice.color}` } : {}} />
+                ))}
+              </div>
+            </div>
           </div>
 
           <div id="arena" ref={arenaRef}>
@@ -714,15 +785,24 @@ export default function App() {
             )}
 
             {phase === "over" && (
-              <div className="ko">
-                <div className="big">K.O.</div>
+              <div className={`ko${isMatchOver ? "" : " ko--round"}`}>
+                <div className="big">{isMatchOver ? "K.O." : `ROUND ${round}`}</div>
                 <div className="winner">{winner}</div>
-                <div className="sub2">VÍTĚZ SLAVÍ VE SKLADU</div>
-                <div className="teethStats">{teethLabel}</div>
-                <div className="trophy">🏆</div>
-                <button type="button" onClick={startFight}>
-                  REMATCH
-                </button>
+                {isMatchOver ? (
+                  <>
+                    <div className="sub2">VÍTĚZ SLAVÍ VE SKLADU</div>
+                    <div className="match-score">
+                      <span style={{ color: p1Choice.color }}>{p1Choice.name} {roundWins.p1}</span>
+                      <span style={{ color: "#555" }}> – </span>
+                      <span style={{ color: p2Choice.color }}>{roundWins.p2} {p2Choice.name}</span>
+                    </div>
+                    <div className="teethStats">{teethLabel}</div>
+                    <div className="trophy">🏆</div>
+                    <button type="button" onClick={startFight}>REMATCH</button>
+                  </>
+                ) : (
+                  <div className="next-round-msg">Příští kolo začíná za chvíli…</div>
+                )}
               </div>
             )}
           </div>

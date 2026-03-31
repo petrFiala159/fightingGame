@@ -260,12 +260,64 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
+.hud-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hud-side--right {
+  align-items: flex-end;
+}
+
+.hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+}
+
+.round-label {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: #444;
+  margin-bottom: 0;
+}
+
+/* Win pips */
+.win-pips {
+  display: flex;
+  gap: 6px;
+  padding-left: 2px;
+}
+.win-pips--right {
+  justify-content: flex-end;
+  padding-left: 0;
+  padding-right: 2px;
+}
+.win-pip {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px solid #2a2a30;
+  background: transparent;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.win-pip--on {
+  animation: winPipPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes winPipPop {
+  0%   { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
 .hpwrap {
-  width: 420px;
+  width: 100%;
 }
 
 .hplabel {
@@ -694,6 +746,40 @@ h2 {
 }
 
 /* ── K.O. SCREEN ── */
+.ko--round {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  animation: koFadeIn 0.3s ease-out;
+}
+.ko--round .big {
+  font-size: 52px;
+  color: #aaa;
+  text-shadow: none;
+}
+.ko--round .winner {
+  font-size: 38px;
+}
+.next-round-msg {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #555;
+  letter-spacing: 0.1em;
+  animation: pulse 1s infinite;
+}
+
+.match-score {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.12em;
+  margin-top: 8px;
+}
+
 .ko {
   position: absolute;
   inset: 0;
