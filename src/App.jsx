@@ -5,7 +5,7 @@ import HealthBar from "./components/HealthBar";
 
 import { FIGHTERS } from "./data/fighters";
 import { CONTROLS_INFO, FIREWORK_COLORS, MAX_HP, MAX_SHOTS, P1_KEYS, P2_KEYS, ROUND_TIME, STAGE_H, STAGE_W, JUMP_FORCE, BASE_MOVE, GRAVITY, FLOOR_Y } from "./game/constants";
-import { unlockAudio, playHitSound, playVictorySound, startBgMusic, pauseBgMusic, resumeBgMusic } from "./game/audio";
+import { unlockAudio, playHitSound, playPunchSound, playKickSound, playHeadshotSound, playBlockSound, playComboSound, playShotFireSound, playShotHitSound, playJumpSound, playLowHpSound, playAnnounceSound, playVictorySound, startBgMusic, pauseBgMusic, resumeBgMusic } from "./game/audio";
 import { cloneFighter, distance, makeFx } from "./game/utils";
 
 export default function App() {
@@ -120,10 +120,17 @@ export default function App() {
     [players.p1.teeth, players.p2.teeth]
   );
 
-  // keep ref in sync so AI can read latest state without closure issues
   // keep refs in sync with state for use inside closures
   useEffect(() => { playersRef.current = players; }, [players]);
   useEffect(() => { winnerRef.current = winner; }, [winner]);
+
+  // Low HP heartbeat warning
+  useEffect(() => {
+    if (phase !== "fight") return;
+    if ((players.p1.hp <= 25 && players.p1.hp > 0) || (players.p2.hp <= 25 && players.p2.hp > 0)) {
+      playLowHpSound();
+    }
+  }, [Math.floor(players.p1.hp / 5), Math.floor(players.p2.hp / 5), phase]);
 
   useEffect(() => {
     const onDown = (event) => {
@@ -226,6 +233,7 @@ export default function App() {
     setTimer(ROUND_TIME);
     setPhase("fight");
     setAnnounce("FIGHT!");
+    playAnnounceSound();
     setTimeout(() => setAnnounce(null), 1200);
   }
 
@@ -272,10 +280,24 @@ export default function App() {
   }
 
   function damageTarget(attackerKey, moveType, amount, headshot = false) {
-    playHitSound(moveType === "kick" ? "kick" : "punch");
+    const snap = playersRef.current;
+    const isBlocked = snap?.[attackerKey === "p1" ? "p2" : "p1"]?.blocking ?? false;
+
+    if (isBlocked) {
+      playBlockSound();
+    } else if (moveType === "combo") {
+      playComboSound();
+    } else if (moveType === "shot") {
+      playShotHitSound();
+    } else if (headshot) {
+      playHeadshotSound();
+    } else if (moveType === "kick") {
+      playKickSound();
+    } else {
+      playPunchSound();
+    }
     triggerShake(moveType === "kick" || moveType === "combo");
 
-    const snap = playersRef.current;
     if (snap) {
       const defenderKey = attackerKey === "p1" ? "p2" : "p1";
       const defender = snap[defenderKey];
@@ -283,7 +305,6 @@ export default function App() {
       const hitY = STAGE_H - FLOOR_Y - defender.y - 170;
       const numId = `dmg-${Date.now()}-${Math.random()}`;
       const isBig = amount >= 12;
-      const isBlocked = defender.blocking;
       setDmgNums((old) => [...old, { id: numId, x: hitX, y: hitY, value: amount, big: isBig, blocked: isBlocked }]);
       setTimeout(() => setDmgNums((old) => old.filter((d) => d.id !== numId)), 900);
     }
@@ -361,6 +382,7 @@ export default function App() {
       const attacker = { ...prev[attackerKey] };
       if (attacker.attackTimer > 0 || attacker.shotsLeft <= 0 || winnerRef.current) return prev;
 
+      playShotFireSound();
       attacker.shotsLeft -= 1;
       attacker.attack = "shot";
       attacker.attackTimer = 18;
@@ -406,9 +428,11 @@ export default function App() {
     const snap = playersRef.current;
     if (!snap) return;
     if (key === snap.p1.controls.jump && snap.p1.y === 0 && !snap.p1.crouching) {
+      playJumpSound();
       setPlayers((prev) => ({ ...prev, p1: { ...prev.p1, vy: JUMP_FORCE } }));
     }
     if (key === snap.p2.controls.jump && snap.p2.y === 0 && !snap.p2.crouching) {
+      playJumpSound();
       setPlayers((prev) => ({ ...prev, p2: { ...prev.p2, vy: JUMP_FORCE } }));
     }
     if (key === snap.p1.controls.punch) melee("p1", "punch");
