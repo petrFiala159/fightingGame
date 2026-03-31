@@ -443,3 +443,47 @@ export function playHitSound(kind = "punch") {
   if (kind === "kick") playKickSound();
   else playPunchSound();
 }
+
+// ─── VOICE ANNOUNCER (Web Speech API) ──────────────────────────────────────
+
+let voiceReady = false;
+let selectedVoice = null;
+
+function initVoice() {
+  if (voiceReady || !window.speechSynthesis) return;
+  const pick = () => {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return;
+    // Prefer deep English male voices
+    selectedVoice =
+      voices.find(v => v.lang === "en-US" && /male/i.test(v.name)) ||
+      voices.find(v => v.lang === "en-GB" && /male/i.test(v.name)) ||
+      voices.find(v => v.lang.startsWith("en-") && /daniel|alex|fred|bruce|ralph/i.test(v.name)) ||
+      voices.find(v => v.lang.startsWith("en-US")) ||
+      voices.find(v => v.lang.startsWith("en"));
+    voiceReady = true;
+  };
+  pick();
+  if (!voiceReady) window.speechSynthesis.addEventListener("voiceschanged", pick, { once: true });
+}
+
+export function speakAnnounce(text, { rate = 0.82, pitch = 0.72, delay = 0 } = {}) {
+  try {
+    if (!window.speechSynthesis) return;
+    initVoice();
+
+    const go = () => {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.rate = rate;
+      u.pitch = pitch;
+      u.volume = 1.0;
+      if (selectedVoice) u.voice = selectedVoice;
+      window.speechSynthesis.speak(u);
+    };
+
+    if (delay > 0) setTimeout(go, delay);
+    else go();
+  } catch {}
+}

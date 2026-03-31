@@ -5,7 +5,7 @@ import HealthBar from "./components/HealthBar";
 
 import { FIGHTERS } from "./data/fighters";
 import { CONTROLS_INFO, FIREWORK_COLORS, MAX_HP, MAX_SHOTS, P1_KEYS, P2_KEYS, ROUND_TIME, STAGE_H, STAGE_W, JUMP_FORCE, BASE_MOVE, GRAVITY, FLOOR_Y } from "./game/constants";
-import { unlockAudio, playHitSound, playPunchSound, playKickSound, playHeadshotSound, playBlockSound, playComboSound, playShotFireSound, playShotHitSound, playJumpSound, playLowHpSound, playAnnounceSound, playVictorySound, startBgMusic, pauseBgMusic, resumeBgMusic } from "./game/audio";
+import { unlockAudio, playHitSound, playPunchSound, playKickSound, playHeadshotSound, playBlockSound, playComboSound, playShotFireSound, playShotHitSound, playJumpSound, playLowHpSound, playAnnounceSound, playVictorySound, speakAnnounce, startBgMusic, pauseBgMusic, resumeBgMusic } from "./game/audio";
 import { cloneFighter, distance, makeFx } from "./game/utils";
 
 export default function App() {
@@ -229,6 +229,10 @@ export default function App() {
     setAnnounce(text);
     playAnnounceSound();
     setTimeout(() => setAnnounce(null), 1400);
+
+    // Voice: "Round 1... Fight!"
+    const label = text === "FINAL ROUND" ? "Final Round" : text.charAt(0) + text.slice(1).toLowerCase();
+    speakAnnounce(`${label}... Fight!`, { delay: 150, rate: 0.78, pitch: 0.7 });
   }
 
   function resetRound() {
@@ -515,11 +519,16 @@ export default function App() {
     setRoundWins(newWins);
 
     const matchOver = newWins.p1 >= 2 || newWins.p2 >= 2;
+    const isP1Winner = snap && nextWinner === snap.p1.name;
+    const winnerLabel = nextWinner === "Remíza" ? "Draw!" : isP1Winner ? "Player one wins!" : "Player two wins!";
+
     if (matchOver) {
       setIsMatchOver(true);
       triggerCelebration();
+      speakAnnounce(`K.O.! ${winnerLabel}`, { delay: 400, rate: 0.75, pitch: 0.65 });
     } else {
       playVictorySound();
+      speakAnnounce(nextWinner === "Remíza" ? "Draw!" : `${winnerLabel} Round over.`, { delay: 300, rate: 0.8, pitch: 0.72 });
       setTimeout(() => startNextRound(), 2800);
     }
   }
