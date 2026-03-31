@@ -12,6 +12,7 @@ export const FIGHTERS = [
   {
     id: "tonda",
     name: "Mlátička",
+    role: "BOXER",
     img: tondaImg,
     color: "#ef4444",
     passive: "Tvrdá brada – dostává o něco menší damage od boxů.",
@@ -20,6 +21,7 @@ export const FIGHTERS = [
   {
     id: "roman",
     name: "Řežba",
+    role: "RYCHLÍK",
     img: romanImg,
     color: "#f59e0b",
     passive: "Rychlý krok – pohybuje se nejrychleji.",
@@ -28,6 +30,7 @@ export const FIGHTERS = [
   {
     id: "radek",
     name: "Blesk",
+    role: "STŘELEC",
     img: radekImg,
     color: "#22c55e",
     passive: "Silná střela – projektil má vyšší damage.",
@@ -37,6 +40,7 @@ export const FIGHTERS = [
   {
     id: "jana",
     name: "Drtička",
+    role: "OBRÁNCE",
     img: janaImg,
     color: "#3b82f6",
     passive: "Ocelový kryt – při bloku schytá méně damage.",

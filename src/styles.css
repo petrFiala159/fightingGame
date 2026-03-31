@@ -796,3 +796,335 @@ h2 {
     overflow-x: auto;
   }
 }
+
+/* ════════════════════════════════════════
+   SELECT SCREEN – complete redesign
+════════════════════════════════════════ */
+
+.sel-screen {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #07070a;
+  border: 1px solid #18181e;
+  padding: 28px 24px 24px;
+  box-shadow: 0 0 80px rgba(0,0,0,.7);
+}
+
+/* Ambient color blobs */
+.sel-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.sel-blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.1;
+  transition: background 0.6s ease;
+  animation: blobPulse 5s ease-in-out infinite alternate;
+}
+.sel-blob--left  { top: -180px; left: -140px; animation-delay: 0s; }
+.sel-blob--right { bottom: -180px; right: -140px; animation-delay: 2s; }
+@keyframes blobPulse {
+  from { transform: scale(1);   opacity: 0.08; }
+  to   { transform: scale(1.25); opacity: 0.16; }
+}
+
+/* 3-column grid */
+.sel-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px 1fr;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  align-items: start;
+}
+
+/* Fighter panel */
+.sel-panel {
+  background: linear-gradient(160deg, #0e0e12 0%, #080809 100%);
+  border: 1px solid #1e1e26;
+  border-top: 3px solid transparent;
+  border-radius: 20px;
+  padding: 18px 16px 16px;
+  text-align: center;
+  transition: border-top-color 0.4s;
+}
+
+.sel-player-tag {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.22em;
+  margin-bottom: 12px;
+  transition: color 0.4s;
+}
+
+/* Portrait */
+.sel-portrait-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.sel-portrait-frame {
+  position: relative;
+  width: 195px;
+  height: 245px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sel-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.sel-portrait-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  pointer-events: none;
+  transition: background 0.4s;
+}
+
+.sel-portrait-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  animation: glowPulse 2.5s ease-in-out infinite alternate;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+@keyframes glowPulse {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+/* Navigation arrows */
+.sel-nav-btn {
+  width: 32px;
+  height: 56px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  color: #aaa;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.sel-nav-btn:hover {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+
+/* Fighter name */
+.sel-name {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 30px;
+  letter-spacing: 0.1em;
+  transition: color 0.4s;
+  animation: namePulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes namePulse {
+  from { text-shadow: 0 0 8px currentColor; }
+  to   { text-shadow: 0 0 28px currentColor; }
+}
+
+/* Role badge */
+.sel-role {
+  display: inline-block;
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid;
+  margin: 6px 0 14px;
+  transition: color 0.4s, border-color 0.4s;
+}
+
+/* Stats bars */
+.sel-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.sel-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sel-stat--rev {
+  flex-direction: row-reverse;
+}
+
+.sel-stat-lbl {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #666;
+  width: 62px;
+  flex-shrink: 0;
+  text-align: left;
+}
+.sel-stat--rev .sel-stat-lbl {
+  text-align: right;
+}
+
+.sel-stat-val {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 11px;
+  color: #444;
+  width: 24px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.sel-stat--rev .sel-stat-val {
+  text-align: left;
+}
+
+.sel-stat-track {
+  flex: 1;
+  height: 5px;
+  background: #141418;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sel-stat-track--rev {
+  transform: scaleX(-1);
+}
+
+.sel-stat-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.4s;
+}
+
+/* Passive */
+.sel-passive {
+  font-size: 11.5px;
+  color: #555;
+  line-height: 1.5;
+  margin: 6px 0 12px;
+  min-height: 30px;
+}
+
+.sel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+/* ── VS CENTER PANEL ── */
+.sel-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 8px;
+}
+
+.sel-vs-matchup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sel-vs-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.sel-vs-side--right {
+  align-items: center;
+}
+
+.sel-vs-portrait {
+  width: 88px;
+  height: 108px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 12px;
+  display: block;
+}
+.sel-vs-portrait--flip {
+  transform: scaleX(-1);
+}
+
+.sel-vs-fname {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-align: center;
+  transition: color 0.4s;
+}
+
+.sel-vs-text {
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 46px;
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(255,255,255,.25);
+  flex-shrink: 0;
+  animation: vsPulse 2s ease-in-out infinite alternate;
+}
+@keyframes vsPulse {
+  from { text-shadow: 0 0 12px rgba(255,255,255,.2); }
+  to   { text-shadow: 0 0 40px rgba(255,255,255,.5); }
+}
+
+.sel-start-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ffffff, #cccccc);
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: 'Bebas Neue', Arial, sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.15s;
+  box-shadow: 0 4px 24px rgba(255,255,255,.12);
+}
+.sel-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(255,255,255,.22);
+}
+.sel-start-btn:active {
+  transform: translateY(0);
+}
+
+.sel-controls-hint {
+  font-size: 10.5px;
+  color: #444;
+  line-height: 1.8;
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}

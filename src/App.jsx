@@ -474,6 +474,17 @@ export default function App() {
     triggerCelebration();
   }
 
+  function getStatBars(fighter) {
+    const s = fighter.stats;
+    return [
+      { label: "PUNCH",    value: Math.round(60 + ((s.punch - 8)   / 2)    * 40) },
+      { label: "KICK",     value: Math.round(60 + ((s.kick - 10)   / 2)    * 40) },
+      { label: "STŘELA",   value: Math.round(60 + ((s.shot - 9)    / 4)    * 40) },
+      { label: "OBRANA",   value: Math.round(60 + ((1.0 - Math.min(s.defense, 1.0)) / 0.22) * 40) },
+      { label: "RYCHLOST", value: Math.round(60 + ((s.speed - 0.98) / 0.24) * 40) },
+    ];
+  }
+
   return (
     <div className="app">
       <div className="topbar">
@@ -504,101 +515,127 @@ export default function App() {
 
       {phase === "select" ? (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <div className="select-layout" onClick={handleSelectAreaClick}>
-          {/* ── P1 CAROUSEL ── */}
-          <div className="panel carousel-panel">
-            <h2 style={{ color: "#ef4444" }}>Hráč 1</h2>
-            <div className="carr3d-scene">
-              {FIGHTERS.map((f, i) => {
-                const selIdx = FIGHTERS.findIndex((x) => x.id === p1Choice.id);
-                let off = i - selIdx;
-                if (off > FIGHTERS.length / 2) off -= FIGHTERS.length;
-                if (off < -FIGHTERS.length / 2) off += FIGHTERS.length;
-                const style = getCard3dStyle(off, f.color);
-                return (
-                  <div
-                    key={f.id}
-                    className="carr3d-card"
-                    style={style}
-                    onClick={Math.abs(off) === 1 ? () => cycleP1(off) : undefined}
-                  >
-                    <img src={f.img} alt={f.name} draggable="false" />
-                    <div className="carr3d-badge" style={{ color: f.color }}>{f.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="carr3d-passive">{p1Choice.passive}</p>
-            <div className="carr-dots">
-              {FIGHTERS.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  className={`dot${f.id === p1Choice.id ? " dot-active" : ""}`}
-                  style={f.id === p1Choice.id ? { background: p1Choice.color } : {}}
-                  onClick={() => setP1Choice(f)}
-                  title={f.name}
-                />
-              ))}
-            </div>
-            <div className="carr-hint">← A &nbsp;·&nbsp; D →</div>
+        <div className="sel-screen" onClick={handleSelectAreaClick}>
+          {/* Ambient background blobs */}
+          <div className="sel-bg">
+            <div className="sel-blob sel-blob--left"  style={{ background: p1Choice.color }} />
+            <div className="sel-blob sel-blob--right" style={{ background: p2Choice.color }} />
           </div>
 
-          {/* ── CENTER PANEL ── */}
-          <div className="panel featurePanel carr-center">
-            <div className="featureTitle">Ovládání</div>
-            <ul className="featureList">
-              {CONTROLS_INFO.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-              <li>Každý hráč má 3 střely za fight.</li>
-              <li>Ve skrčení zároveň kryješ a dostáváš méně damage.</li>
-              <li>Po výhře hraje oslavný zvuk a běží ohňostroj.</li>
-            </ul>
-            <button type="button" className="start" onClick={startFight}>
-              START FIGHT
-            </button>
-            <div className="carr-hint" style={{ marginTop: 10 }}>nebo stiskni Enter</div>
-          </div>
+          <div className="sel-layout">
 
-          {/* ── P2 CAROUSEL ── */}
-          <div className="panel carousel-panel">
-            <h2 style={{ color: "#06b6d4" }}>Hráč 2</h2>
-            <div className="carr3d-scene">
-              {FIGHTERS.map((f, i) => {
-                const selIdx = FIGHTERS.findIndex((x) => x.id === p2Choice.id);
-                let off = i - selIdx;
-                if (off > FIGHTERS.length / 2) off -= FIGHTERS.length;
-                if (off < -FIGHTERS.length / 2) off += FIGHTERS.length;
-                const style = getCard3dStyle(off, f.color);
-                return (
-                  <div
-                    key={f.id}
-                    className="carr3d-card"
-                    style={style}
-                    onClick={Math.abs(off) === 1 ? () => cycleP2(off) : undefined}
-                  >
-                    <img src={f.img} alt={f.name} draggable="false" />
-                    <div className="carr3d-badge" style={{ color: f.color }}>{f.name}</div>
+            {/* ── P1 PANEL ── */}
+            <div className="sel-panel" style={{ borderTopColor: p1Choice.color }}>
+              <div className="sel-player-tag" style={{ color: p1Choice.color }}>HRÁČ 1</div>
+
+              <div className="sel-portrait-row">
+                <button type="button" className="sel-nav-btn" onClick={() => cycleP1(-1)}>‹</button>
+                <div className="sel-portrait-frame">
+                  <img src={p1Choice.img} alt={p1Choice.name} className="sel-portrait-img" draggable="false" />
+                  <div className="sel-portrait-bottom" style={{ background: `linear-gradient(transparent, ${p1Choice.color}99)` }} />
+                  <div className="sel-portrait-glow" style={{ border: `2px solid ${p1Choice.color}`, boxShadow: `0 0 36px ${p1Choice.color}66, inset 0 0 24px ${p1Choice.color}22` }} />
+                </div>
+                <button type="button" className="sel-nav-btn" onClick={() => cycleP1(1)}>›</button>
+              </div>
+
+              <div className="sel-name" style={{ color: p1Choice.color }}>{p1Choice.name}</div>
+              <div className="sel-role" style={{ borderColor: `${p1Choice.color}88`, color: p1Choice.color }}>{p1Choice.role}</div>
+
+              <div className="sel-stats">
+                {getStatBars(p1Choice).map(({ label, value }) => (
+                  <div key={label} className="sel-stat">
+                    <span className="sel-stat-lbl">{label}</span>
+                    <div className="sel-stat-track">
+                      <div className="sel-stat-fill" style={{ width: `${value}%`, background: p1Choice.color }} />
+                    </div>
+                    <span className="sel-stat-val">{value}</span>
                   </div>
-                );
-              })}
-            </div>
-            <p className="carr3d-passive">{p2Choice.passive}</p>
+                ))}
+              </div>
 
-            <div className="carr-dots">
-              {FIGHTERS.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  className={`dot${f.id === p2Choice.id ? " dot-active" : ""}`}
-                  style={f.id === p2Choice.id ? { background: p2Choice.color } : {}}
-                  onClick={() => setP2Choice(f)}
-                  title={f.name}
-                />
-              ))}
+              <p className="sel-passive">{p1Choice.passive}</p>
+
+              <div className="sel-dots">
+                {FIGHTERS.map((f) => (
+                  <button key={f.id} type="button"
+                    className={`dot${f.id === p1Choice.id ? " dot-active" : ""}`}
+                    style={f.id === p1Choice.id ? { background: p1Choice.color } : {}}
+                    onClick={() => setP1Choice(f)} title={f.name}
+                  />
+                ))}
+              </div>
+              <div className="carr-hint" style={{ marginTop: 8 }}>← A · D →</div>
             </div>
-            <div className="carr-hint">← ↑ &nbsp;·&nbsp; → šipky</div>
+
+            {/* ── VS CENTER ── */}
+            <div className="sel-vs">
+              <div className="sel-vs-matchup">
+                <div className="sel-vs-side">
+                  <img src={p1Choice.img} className="sel-vs-portrait" alt={p1Choice.name} />
+                  <div className="sel-vs-fname" style={{ color: p1Choice.color }}>{p1Choice.name}</div>
+                </div>
+                <div className="sel-vs-text">VS</div>
+                <div className="sel-vs-side sel-vs-side--right">
+                  <img src={p2Choice.img} className="sel-vs-portrait sel-vs-portrait--flip" alt={p2Choice.name} />
+                  <div className="sel-vs-fname" style={{ color: p2Choice.color }}>{p2Choice.name}</div>
+                </div>
+              </div>
+
+              <button type="button" className="sel-start-btn" onClick={startFight}>
+                START FIGHT
+              </button>
+              <div className="carr-hint" style={{ marginTop: 6 }}>nebo stiskni Enter</div>
+
+              <div className="sel-controls-hint">
+                <div><span style={{ color: "#ef4444" }}>P1:</span> A/D pohyb · W skok · F box · G kop · H střela</div>
+                <div><span style={{ color: "#06b6d4" }}>P2:</span> ←/→ pohyb · ↑ skok · J box · K kop · L střela</div>
+                <div style={{ color: "#666", marginTop: 4 }}>KOMBO: BOX–BOX–KOP / KOP–BOX–KOP</div>
+              </div>
+            </div>
+
+            {/* ── P2 PANEL ── */}
+            <div className="sel-panel" style={{ borderTopColor: p2Choice.color }}>
+              <div className="sel-player-tag" style={{ color: p2Choice.color }}>HRÁČ 2</div>
+
+              <div className="sel-portrait-row">
+                <button type="button" className="sel-nav-btn" onClick={() => cycleP2(-1)}>‹</button>
+                <div className="sel-portrait-frame">
+                  <img src={p2Choice.img} alt={p2Choice.name} className="sel-portrait-img" draggable="false" />
+                  <div className="sel-portrait-bottom" style={{ background: `linear-gradient(transparent, ${p2Choice.color}99)` }} />
+                  <div className="sel-portrait-glow" style={{ border: `2px solid ${p2Choice.color}`, boxShadow: `0 0 36px ${p2Choice.color}66, inset 0 0 24px ${p2Choice.color}22` }} />
+                </div>
+                <button type="button" className="sel-nav-btn" onClick={() => cycleP2(1)}>›</button>
+              </div>
+
+              <div className="sel-name" style={{ color: p2Choice.color }}>{p2Choice.name}</div>
+              <div className="sel-role" style={{ borderColor: `${p2Choice.color}88`, color: p2Choice.color }}>{p2Choice.role}</div>
+
+              <div className="sel-stats">
+                {getStatBars(p2Choice).map(({ label, value }) => (
+                  <div key={label} className="sel-stat sel-stat--rev">
+                    <span className="sel-stat-val">{value}</span>
+                    <div className="sel-stat-track sel-stat-track--rev">
+                      <div className="sel-stat-fill" style={{ width: `${value}%`, background: p2Choice.color }} />
+                    </div>
+                    <span className="sel-stat-lbl">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="sel-passive">{p2Choice.passive}</p>
+
+              <div className="sel-dots">
+                {FIGHTERS.map((f) => (
+                  <button key={f.id} type="button"
+                    className={`dot${f.id === p2Choice.id ? " dot-active" : ""}`}
+                    style={f.id === p2Choice.id ? { background: p2Choice.color } : {}}
+                    onClick={() => setP2Choice(f)} title={f.name}
+                  />
+                ))}
+              </div>
+              <div className="carr-hint" style={{ marginTop: 8 }}>← ↑ · → šipky</div>
+            </div>
+
           </div>
         </div>
       ) : (
