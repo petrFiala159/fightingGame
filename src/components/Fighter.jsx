@@ -5,11 +5,15 @@ export default function Fighter({ fighter, side, isWinner }) {
   const flip = side === "left" ? 1 : -1;
   const shirtName = fighter.name;
 
-  // Determine which sprite PNG to show
+  // Determine which sprite PNG to show (with fallback to idle)
+  const sp = fighter.sprites || {};
+  const has = (key) => !!sp[key];
+
   let spriteKey = "idle";
-  if (isWinner)                        spriteKey = "win";
-  else if (fighter.hurtTimer > 0)      spriteKey = "idle";
-  else if (fighter.attack === "punch") spriteKey = "punch";
+  if (isWinner)                                       spriteKey = "win";
+  else if (fighter.hurtTimer > 0)                     spriteKey = has("hurt") ? "hurt" : "idle";
+  else if (fighter.crouching)                         spriteKey = has("crouch") ? "crouch" : "idle";
+  else if (fighter.attack === "punch")                spriteKey = "punch";
   else if (fighter.attack === "kick" || fighter.attack === "shot") spriteKey = "kick";
 
   return (
@@ -27,7 +31,7 @@ export default function Fighter({ fighter, side, isWinner }) {
     >
       {fighter.sprites ? (
         <img
-          src={fighter.sprites[spriteKey]}
+          src={fighter.sprites[spriteKey] || fighter.sprites.idle}
           alt={fighter.name}
           className={`fighterSprite${isWinner ? " fighterSprite--win" : ""}`}
           draggable="false"
